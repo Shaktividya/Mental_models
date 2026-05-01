@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Charlie Munger's Mental Model Library</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #0e0e0e;
+    --surface: #161616;
+    --surface2: #1e1e1e;
+    --border: #2a2a2a;
+    --text: #e8e3d8;
+    --text-dim: #7a7468;
+    --text-mid: #a09890;
+    --gold: #c9a84c;
+    --gold-dim: #7a6328;
+    --red: #c14a3a;
+    --blue: #4a7fc1;
+    --green: #4a9c6a;
+    --purple: #8a5cc1;
+    --teal: #4a9090;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 40px 48px 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 280px; height: 280px;
+    background: radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(28px, 5vw, 52px);
+    font-weight: 900;
+    line-height: 1.05;
+    color: var(--text);
+    margin-bottom: 16px;
+  }
+  h1 span { color: var(--gold); }
+  .header-sub {
+    font-size: 13px;
+    color: var(--text-dim);
+    max-width: 560px;
+    line-height: 1.6;
+  }
+  .header-meta {
+    display: flex;
+    gap: 24px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+  .meta-pill {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-mid);
+    border: 1px solid var(--border);
+    padding: 4px 12px;
+    border-radius: 2px;
+  }
+  .meta-pill strong { color: var(--gold); }
+
+  /* ── CONTROLS ── */
+  .controls {
+    padding: 20px 48px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    background: rgba(14,14,14,0.96);
+    backdrop-filter: blur(8px);
+    z-index: 10;
+  }
+  .search-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+    max-width: 320px;
+  }
+  .search-wrap input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 12px 8px 36px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    outline: none;
+    border-radius: 2px;
+    transition: border-color 0.15s;
+  }
+  .search-wrap input:focus { border-color: var(--gold-dim); }
+  .search-icon {
+    position: absolute;
+    left: 10px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-dim);
+    font-size: 14px;
+  }
+  .filters {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .filter-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 2px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .filter-btn:hover { color: var(--text); border-color: var(--text-mid); }
+  .filter-btn.active { color: var(--bg); border-color: transparent; }
+  .filter-btn[data-cat="all"].active { background: var(--text); }
+  .filter-btn[data-cat="psychology"].active { background: var(--red); border-color: var(--red); }
+  .filter-btn[data-cat="thinking"].active { background: var(--gold); border-color: var(--gold); }
+  .filter-btn[data-cat="economics"].active { background: var(--blue); border-color: var(--blue); }
+  .filter-btn[data-cat="moats"].active { background: var(--green); border-color: var(--green); }
+  .filter-btn[data-cat="math"].active { background: var(--purple); border-color: var(--purple); }
+  .filter-btn[data-cat="systems"].active { background: var(--teal); border-color: var(--teal); }
+  .filter-btn[data-cat="biology"].active { background: #7a9c4a; border-color: #7a9c4a; }
+  .filter-btn[data-cat="org"].active { background: #9c6a4a; border-color: #9c6a4a; }
+
+  .count-display {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-left: auto;
+    white-space: nowrap;
+  }
+
+  /* ── LAYOUT ── */
+  .main {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    min-height: calc(100vh - 200px);
+  }
+  .sidebar {
+    border-right: 1px solid var(--border);
+    padding: 24px 0;
+    position: sticky;
+    top: 61px;
+    height: calc(100vh - 61px);
+    overflow-y: auto;
+  }
+  .sidebar-section {
+    margin-bottom: 8px;
+  }
+  .sidebar-heading {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 0 20px;
+    margin-bottom: 4px;
+  }
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 20px;
+    cursor: pointer;
+    transition: background 0.1s;
+    font-size: 12px;
+    color: var(--text-mid);
+  }
+  .sidebar-item:hover { background: var(--surface); color: var(--text); }
+  .sidebar-item.active { background: var(--surface2); color: var(--text); }
+  .sidebar-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ── GRID ── */
+  .grid-area {
+    padding: 24px 32px;
+  }
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 16px;
+    margin-top: 8px;
+  }
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .section-count {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 10px;
+    margin-bottom: 40px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    opacity: 0.6;
+  }
+  .card[data-cat="psychology"]::before { background: var(--red); }
+  .card[data-cat="thinking"]::before { background: var(--gold); }
+  .card[data-cat="economics"]::before { background: var(--blue); }
+  .card[data-cat="moats"]::before { background: var(--green); }
+  .card[data-cat="math"]::before { background: var(--purple); }
+  .card[data-cat="systems"]::before { background: var(--teal); }
+  .card[data-cat="biology"]::before { background: #7a9c4a; }
+  .card[data-cat="org"]::before { background: #9c6a4a; }
+
+  .card:hover {
+    border-color: var(--text-mid);
+    background: var(--surface2);
+    transform: translateY(-1px);
+  }
+  .card.open {
+    border-color: var(--gold-dim);
+    background: var(--surface2);
+  }
+  .card-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+  .card-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.35;
+    margin-bottom: 8px;
+  }
+  .card-source {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    font-style: italic;
+    margin-bottom: 0;
+  }
+  .card-detail {
+    display: none;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text-mid);
+    line-height: 1.6;
+  }
+  .card-detail.open { display: block; }
+  .card-detail strong { color: var(--gold); }
+  .card-quote {
+    margin-top: 8px;
+    padding: 8px 12px;
+    border-left: 2px solid var(--gold-dim);
+    font-style: italic;
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.55;
+  }
+
+  /* ── EMPTY ── */
+  .empty-state {
+    grid-column: 1/-1;
+    padding: 60px;
+    text-align: center;
+    color: var(--text-dim);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 700px) {
+    header { padding: 24px 20px; }
+    .controls { padding: 14px 20px; }
+    .main { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .grid-area { padding: 16px; }
+  }
+
+  .no-results { display: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-label">Reference Library · Compiled from Primary Sources</div>
+  <h1>Charlie Munger's<br><span>Mental Models</span></h1>
+  <p class="header-sub">The complete latticework — drawn from <em>Poor Charlie's Almanack</em>, "The Psychology of Human Misjudgment" (1995, rev. 2005), "Elementary Worldly Wisdom" (1994), and decades of Berkshire shareholder meetings and talks.</p>
+  <div class="header-meta">
+    <div class="meta-pill"><strong id="total-count">107</strong> Models</div>
+    <div class="meta-pill"><strong>8</strong> Disciplines</div>
+    <div class="meta-pill"><strong>25</strong> Psychology Tendencies (Munger's own)</div>
+    <div class="meta-pill">Primary source: <strong>Poor Charlie's Almanack</strong></div>
+  </div>
+</header>
+
+<div class="controls">
+  <div class="search-wrap">
+    <span class="search-icon">⌕</span>
+    <input type="text" id="search" placeholder="Search models..." oninput="applyFilters()">
+  </div>
+  <div class="filters">
+    <button class="filter-btn active" data-cat="all" onclick="setFilter('all',this)">All</button>
+    <button class="filter-btn" data-cat="psychology" onclick="setFilter('psychology',this)">Psychology</button>
+    <button class="filter-btn" data-cat="thinking" onclick="setFilter('thinking',this)">Thinking</button>
+    <button class="filter-btn" data-cat="economics" onclick="setFilter('economics',this)">Economics</button>
+    <button class="filter-btn" data-cat="moats" onclick="setFilter('moats',this)">Moats</button>
+    <button class="filter-btn" data-cat="math" onclick="setFilter('math',this)">Math</button>
+    <button class="filter-btn" data-cat="systems" onclick="setFilter('systems',this)">Systems</button>
+    <button class="filter-btn" data-cat="biology" onclick="setFilter('biology',this)">Biology</button>
+    <button class="filter-btn" data-cat="org" onclick="setFilter('org',this)">Org</button>
+  </div>
+  <div class="count-display" id="count-display">107 models</div>
+</div>
+
+<div class="main">
+  <div class="sidebar" id="sidebar"></div>
+  <div class="grid-area" id="grid-area"></div>
+</div>
+
+<script>
+const CATS = {
+  psychology: { label: "Psychology & Biases", color: "#c14a3a", short: "PSY" },
+  thinking:   { label: "Thinking Tools",      color: "#c9a84c", short: "THK" },
+  economics:  { label: "Economics & Business",color: "#4a7fc1", short: "ECO" },
+  moats:      { label: "Competitive Moats",   color: "#4a9c6a", short: "MOA" },
+  math:       { label: "Math & Probability",  color: "#8a5cc1", short: "MTH" },
+  systems:    { label: "Systems & Physics",   color: "#4a9090", short: "SYS" },
+  biology:    { label: "Biology & Evolution", color: "#7a9c4a", short: "BIO" },
+  org:        { label: "Organizational",      color: "#9c6a4a", short: "ORG" },
+};
+
+const MODELS = [
+  // ── PSYCHOLOGY (25 from Munger's own speech) ──
+  { id:1, cat:"psychology", name:"Reward & Punishment Superresponse Tendency", source:"Psychology of Human Misjudgment", detail:"Munger's #1 model. Incentives and disincentives drive virtually all human behavior — often more powerfully than people realize. 'Show me the incentive and I'll show you the outcome.'", quote:"Never, ever, think about something else when you should be thinking about the power of incentives." },
+  { id:2, cat:"psychology", name:"Liking / Loving Tendency", source:"Psychology of Human Misjudgment", detail:"We ignore faults of, and comply with wishes of, those we love. Admiration also intensifies love — a feedback loop that can cause extreme behavior including self-destruction.", quote:"" },
+  { id:3, cat:"psychology", name:"Disliking / Hating Tendency", source:"Psychology of Human Misjudgment", detail:"Mirror of #2. We ignore virtues of those we hate and distort facts to facilitate hatred. This can make conflict resolution nearly impossible when both sides' 'facts' don't overlap.", quote:"" },
+  { id:4, cat:"psychology", name:"Doubt-Avoidance Tendency", source:"Psychology of Human Misjudgment", detail:"The brain is programmed to remove doubt quickly by reaching a decision. Triggered by puzzlement + stress. Explains impulsive decisions under pressure and religious leaps of faith.", quote:"" },
+  { id:5, cat:"psychology", name:"Inconsistency-Avoidance Tendency", source:"Psychology of Human Misjudgment", detail:"The brain conserves space by resisting change. Creates First-Conclusion Bias and Confirmation Bias. Much easier to prevent a bad habit than to change one already formed.", quote:"The chains of habit are too light to be felt until they are too strong to be broken." },
+  { id:6, cat:"psychology", name:"Curiosity Tendency", source:"Psychology of Human Misjudgment", detail:"Curiosity is a rare positive tendency — it counteracts the Man-with-a-Hammer syndrome, loosens fixed beliefs, and keeps learning active long after formal education ends.", quote:"The curious are provided with much fun and wisdom long after formal education has ended." },
+  { id:7, cat:"psychology", name:"Kantian Fairness Tendency", source:"Psychology of Human Misjudgment", detail:"Humans expect fairness and are deeply unsettled when they don't receive it. Based on Kant's categorical imperative. Munger notes tolerating small unfairness can enable greater fairness overall.", quote:"" },
+  { id:8, cat:"psychology", name:"Envy / Jealousy Tendency", source:"Psychology of Human Misjudgment", detail:"Surprisingly absent from psychology textbooks, yet dominates life, especially where food and resources are scarce. Triggered by seeing others possess something desirable.", quote:"It is not greed that drives the world, but envy." },
+  { id:9, cat:"psychology", name:"Reciprocation Tendency", source:"Psychology of Human Misjudgment", detail:"Humans feel compelled to return favors and punish wrongs. Powerful enough to make enemies trust you (the Franklin Effect). Also exploited extensively in sales and influence.", quote:"" },
+  { id:10, cat:"psychology", name:"Influence-from-Mere-Association Tendency", source:"Psychology of Human Misjudgment", detail:"We are influenced by mere association — a product, person, or idea gains or loses value simply by what it's associated with. The basis of most advertising.", quote:"" },
+  { id:11, cat:"psychology", name:"Simple, Pain-Avoiding Psychological Denial", source:"Psychology of Human Misjudgment", detail:"Humans distort facts until they are bearable. Particularly dangerous in medical self-diagnosis, financial denial, and addiction. Reality is rejected to avoid painful truths.", quote:"" },
+  { id:12, cat:"psychology", name:"Excessive Self-Regard Tendency", source:"Psychology of Human Misjudgment", detail:"Everyone thinks they're above average. The source of overconfidence. Munger says the best antidote is to take pride in being trustworthy rather than in being right.", quote:"" },
+  { id:13, cat:"psychology", name:"Overoptimism Tendency", source:"Psychology of Human Misjudgment", detail:"Humans systematically overestimate their chances of success. Widely documented. Munger recommends combining with base rates and inversion to get a realistic view.", quote:"" },
+  { id:14, cat:"psychology", name:"Deprival-Superreaction Tendency", source:"Psychology of Human Misjudgment", detail:"Loss aversion in full form — people react far more strongly to losing something than to gaining the same thing. Includes things not yet possessed but almost-possessed.", quote:"" },
+  { id:15, cat:"psychology", name:"Social-Proof Tendency", source:"Psychology of Human Misjudgment", detail:"We copy the behavior of those around us, especially under uncertainty or stress. Explains cult conversions, mob behavior, and market manias. Powerful enough to crash planes.", quote:"" },
+  { id:16, cat:"psychology", name:"Contrast-Misreaction Tendency", source:"Psychology of Human Misjudgment", detail:"We judge things relative to what they are compared with, not in absolute terms. Explains why a $10 markup seems trivial after a $1000 purchase but outrageous alone.", quote:"" },
+  { id:17, cat:"psychology", name:"Stress-Influence Tendency", source:"Psychology of Human Misjudgment", detail:"Stress degrades cognitive function and supercharges other biases. Adrenal responses that evolved for short-term threats are destructive in long-duration modern stressors.", quote:"" },
+  { id:18, cat:"psychology", name:"Availability-Misweighing Tendency", source:"Psychology of Human Misjudgment", detail:"The brain overweights what is easily available to it. Vivid, recent, or emotionally charged information gets too much weight. Checklists are Munger's main antidote.", quote:"" },
+  { id:19, cat:"psychology", name:"Use-It-or-Lose-It Tendency", source:"Psychology of Human Misjudgment", detail:"Skills attenuate with disuse. A wise person practices all useful rarely-used skills. Munger himself maintained checklist discipline precisely to fight this tendency.", quote:"" },
+  { id:20, cat:"psychology", name:"Drug-Misinfluence Tendency", source:"Psychology of Human Misjudgment", detail:"Chemicals — including alcohol and drugs — distort cognition in predictable, damaging ways. Munger considered this a serious hazard deserving of extra weight in personal risk assessment.", quote:"" },
+  { id:21, cat:"psychology", name:"Senescence-Misinfluence Tendency", source:"Psychology of Human Misjudgment", detail:"Aging causes natural loss of some skills and cognitive abilities. Continuous learning slows the decay. Munger was still sharp at 99 because he never stopped intensely reading.", quote:"" },
+  { id:22, cat:"psychology", name:"Authority-Misinfluence Tendency", source:"Psychology of Human Misjudgment", detail:"Humans are built to follow leaders. Even an irrational authority figure causes 25% of trained co-pilots to allow a plane to crash. Checklist culture is the airline industry's solution.", quote:"" },
+  { id:23, cat:"psychology", name:"Twaddle Tendency", source:"Psychology of Human Misjudgment", detail:"Humans have a tendency to fill time with idle talk and empty words — especially in committees and boards. Munger had little tolerance for it and kept Berkshire meetings unusually efficient.", quote:"" },
+  { id:24, cat:"psychology", name:"Reason-Respecting Tendency", source:"Psychology of Human Misjudgment", detail:"People are far more likely to comply when given a reason — even a weak or fake one. 'Because I said so' fails where 'because X' succeeds. Exploited by persuaders constantly.", quote:"" },
+  { id:25, cat:"psychology", name:"Lollapalooza Effect", source:"Psychology of Human Misjudgment", detail:"Munger's most important meta-model. When multiple psychological tendencies align toward the same conclusion, they create extreme, outsized outcomes — both good (cult sales) and bad (crashes).", quote:"The most important thing to learn is that several of these tendencies often conspire together." },
+
+  // ── THINKING TOOLS ──
+  { id:26, cat:"thinking", name:"Inversion", source:"Elementary Worldly Wisdom; Poor Charlie's Almanack", detail:"Always invert. Don't just ask how to succeed — ask how to guarantee failure and avoid it. 'All I want to know is where I'm going to die, so I'll never go there.'", quote:"Invert, always invert." },
+  { id:27, cat:"thinking", name:"Latticework of Mental Models", source:"Elementary Worldly Wisdom (1994)", detail:"The master framework. Models from multiple disciplines, combined together, create an interconnected system of understanding. The whole is far greater than any individual model.", quote:"You've got to have models in your head. And you've got to array your experience — both vicarious and direct — on this latticework of models." },
+  { id:28, cat:"thinking", name:"Multidisciplinary Thinking", source:"Elementary Worldly Wisdom", detail:"Wisdom cannot be found in one academic department. Draw from physics, biology, psychology, math, economics, engineering, history. The man-with-a-hammer uses one tool; Munger uses many.", quote:"" },
+  { id:29, cat:"thinking", name:"Circle of Competence", source:"Berkshire Letters & Talks", detail:"Know the edges of what you understand. Within the circle: act decisively. Outside: either learn or stay away. The key is intellectual honesty about where your boundary lies.", quote:"" },
+  { id:30, cat:"thinking", name:"Two-Track Analysis", source:"Psychology of Human Misjudgment", detail:"Every important decision should run on two parallel tracks: (1) rational analysis of facts and numbers; (2) psychological analysis of biases and misjudgment. Most only run Track 1.", quote:"" },
+  { id:31, cat:"thinking", name:"First Principles Thinking", source:"Poor Charlie's Almanack", detail:"Strip away analogy and assumption. Reason from the most fundamental truths upward. Particularly powerful when entering new domains where conventional wisdom may be wrong.", quote:"" },
+  { id:32, cat:"thinking", name:"Second-Order Thinking", source:"Poor Charlie's Almanack", detail:"Think beyond immediate effects. 'And then what?' Most people see first-order effects; Munger trained himself to trace second and third-order consequences before deciding.", quote:"" },
+  { id:33, cat:"thinking", name:"Man-With-a-Hammer Tendency", source:"Psychology of Human Misjudgment", detail:"If the only tool you have is a hammer, everything looks like a nail. Single-discipline thinkers torture reality into their one model's framework. The antidote: the full latticework.", quote:"" },
+  { id:34, cat:"thinking", name:"Checklist Approach", source:"Berkshire Meetings; Poor Charlie's Almanack", detail:"Checklists counteract Availability-Misweighing and Use-It-or-Lose-It tendencies. Munger borrowed the idea from aviation. Used at Berkshire for investment screening.", quote:"" },
+  { id:35, cat:"thinking", name:"Falsification / Disconfirming Evidence", source:"Poor Charlie's Almanack", detail:"Following Darwin's method: actively seek evidence that disproves your hypothesis. Munger called Darwin one of his heroes for his discipline of recording every counter-argument immediately before he forgot it.", quote:"" },
+  { id:36, cat:"thinking", name:"Occam's Razor", source:"Elementary Worldly Wisdom", detail:"Among competing explanations, prefer the simplest one that fits all the facts. Complexity is often a disguise for fuzzy thinking. Munger prized simplicity as intellectual virtue.", quote:"" },
+  { id:37, cat:"thinking", name:"Mental Accounting", source:"Psychology of Human Misjudgment; Talks", detail:"Money's psychological value is shaped by how it was earned or categorized. House money is spent differently from earned money — a cognitive error with real financial consequences.", quote:"" },
+  { id:38, cat:"thinking", name:"Scenario Analysis", source:"Poor Charlie's Almanack", detail:"Map multiple possible futures rather than predicting a single one. Munger was explicit that making fewer predictions and making them better was key to Berkshire's success.", quote:"Our predictions have been better than others' because we've made fewer of them." },
+  { id:39, cat:"thinking", name:"Vivification", source:"Psychology of Human Misjudgment", detail:"Making ideas vivid and concrete makes them stick and counteracts Availability-Misweighing. Abstract statistics rarely change behavior; a single vivid story does.", quote:"" },
+  { id:40, cat:"thinking", name:"Elementary Worldly Wisdom", source:"USC Business School Speech, 1994", detail:"The overarching idea that an integrated set of basic models from all major disciplines — not narrow specialization — creates genuinely useful wisdom for real-world decisions.", quote:"" },
+  { id:41, cat:"thinking", name:"Orangutan Effect (Teach to Learn)", source:"Poor Charlie's Almanack", detail:"Explaining an idea to someone else (even an orangutan) forces you to truly understand it. You exit thinking more clearly than when you entered.", quote:"If you sit down with an orangutan and carefully explain one of your cherished ideas, you may leave behind a puzzled primate, but you'll exit thinking more clearly." },
+  { id:42, cat:"thinking", name:"Avoiding Mistakes Over Seeking Brilliance", source:"Berkshire Meetings; Talks", detail:"Munger's investment philosophy was partly about not being stupid. Avoiding the predictable pitfalls of psychology and incentives beats trying to be brilliant.", quote:"It's not supposed to be easy. Anyone who finds it easy is stupid." },
+
+  // ── ECONOMICS & BUSINESS ──
+  { id:43, cat:"economics", name:"Incentives & Incentive Alignment", source:"Elementary Worldly Wisdom; All Talks", detail:"The single most powerful economic model. Get incentives right and most other problems solve themselves. Get them wrong and no amount of management or good intentions fixes them.", quote:"Show me the incentive and I'll show you the outcome." },
+  { id:44, cat:"economics", name:"Opportunity Cost", source:"Elementary Worldly Wisdom", detail:"The value of the next-best alternative foregone. Central to all rational decision-making. Munger said if you have one idea that beats 98% of alternatives, screen out the 98%.", quote:"" },
+  { id:45, cat:"economics", name:"Supply and Demand", source:"Elementary Worldly Wisdom", detail:"The foundational model of economics. Munger used it constantly to understand commodity businesses, pricing power, and why most commodity producers earn poor returns.", quote:"" },
+  { id:46, cat:"economics", name:"Elasticity", source:"Elementary Worldly Wisdom", detail:"How sensitive is demand (or supply) to price or other changes? Inelastic demand = pricing power = durable high returns. Elastic = commodity trap.", quote:"" },
+  { id:47, cat:"economics", name:"Comparative Advantage", source:"Elementary Worldly Wisdom", detail:"Ricardo's insight: specialize in what you're relatively best at, trade for the rest. Explains global trade patterns and optimal resource allocation within organizations.", quote:"" },
+  { id:48, cat:"economics", name:"Marginal Utility / Diminishing Returns", source:"Elementary Worldly Wisdom", detail:"Each additional unit of something provides less additional benefit. The 10th sandwich is worth much less than the first. Central to understanding when to stop doing more of something.", quote:"" },
+  { id:49, cat:"economics", name:"Time Value of Money", source:"Elementary Worldly Wisdom", detail:"A dollar today is worth more than a dollar tomorrow. The foundation of all discounting and compounding calculations — the mathematical engine of investing.", quote:"" },
+  { id:50, cat:"economics", name:"Agency Problem / Principal-Agent Problem", source:"Poor Charlie's Almanack", detail:"Agents (employees, fund managers, advisors) have different incentives from principals (owners, clients). Without alignment, agents serve themselves. Explains much corporate dysfunction.", quote:"" },
+  { id:51, cat:"economics", name:"Information Asymmetry", source:"Elementary Worldly Wisdom", detail:"One party in a transaction knows more than the other. Leads to adverse selection and moral hazard. Explains why used car markets and insurance markets are so inefficient.", quote:"" },
+  { id:52, cat:"economics", name:"Adverse Selection", source:"Elementary Worldly Wisdom", detail:"When one side of a market has private information, the other side gets systematically worse outcomes. The classic example: only the sickest buy insurance, raising rates for all.", quote:"" },
+  { id:53, cat:"economics", name:"Moral Hazard", source:"Elementary Worldly Wisdom", detail:"When someone is insulated from consequences, they take more risk. Banking bailouts, insurance, and employee stock options all create moral hazard if poorly designed.", quote:"" },
+  { id:54, cat:"economics", name:"Creative / Competitive Destruction", source:"Elementary Worldly Wisdom", detail:"Schumpeter's model: capitalism's engine is the constant displacement of old by new. Most businesses are eventually destroyed by better alternatives. Munger invested only in exceptions.", quote:"" },
+  { id:55, cat:"economics", name:"Intrinsic Value / Value to a Private Owner", source:"Berkshire Letters & Meetings", detail:"The discounted present value of all future cash a business will generate over its life. The only rational basis for an investment decision, separate from market price.", quote:"" },
+  { id:56, cat:"economics", name:"Mr. Market", source:"Berkshire Meetings (from Graham)", detail:"Ben Graham's metaphor: the market is a manic-depressive partner offering to buy or sell at wildly varying prices. Treat his offers as opportunities, not as information about value.", quote:"" },
+  { id:57, cat:"economics", name:"Tax Deferral & Compounding Advantage", source:"Berkshire Meetings", detail:"Deferring taxes on gains is a massive structural advantage. Munger and Buffett's long holding periods were partly about keeping the government's interest-free loan running.", quote:"" },
+  { id:58, cat:"economics", name:"Pareto Principle (80/20)", source:"Poor Charlie's Almanack", detail:"Most results come from a minority of causes. In investing: a few decisions account for most gains/losses. In business: a few products, customers, or employees drive most value.", quote:"" },
+  { id:59, cat:"economics", name:"Gresham's Law", source:"Elementary Worldly Wisdom", detail:"Bad drives out good. In currency: debased coin drives out sound coin. In culture: if an organization rewards bad behavior, good behavior becomes rare.", quote:"" },
+  { id:60, cat:"economics", name:"Margin of Safety", source:"Berkshire Philosophy (from Graham)", detail:"Buy with a cushion below intrinsic value to protect against errors of estimation. The greater the uncertainty, the larger the required margin. The antidote to overoptimism.", quote:"" },
+  { id:61, cat:"economics", name:"Obsolescence Risk", source:"Poor Charlie's Almanack", detail:"Every business faces the risk of being made irrelevant by innovation. The best businesses have moats that make them immune or slow to obsolescence. Most don't.", quote:"" },
+  { id:62, cat:"economics", name:"Value Creation vs. Value Capture", source:"Poor Charlie's Almanack", detail:"Creating value doesn't mean you'll capture it. Airlines create enormous value for passengers but rarely earn good returns. The structural question: who keeps the surplus?", quote:"" },
+
+  // ── COMPETITIVE MOATS ──
+  { id:63, cat:"moats", name:"Economic Moats (Durable Competitive Advantage)", source:"Berkshire Annual Letters & Meetings", detail:"The foundational investment concept. A moat is what protects a business from competition and allows it to earn excess returns over time. Munger and Buffett only buy businesses with moats.", quote:"" },
+  { id:64, cat:"moats", name:"Brand Power / Intangible Assets", source:"Berkshire Meetings", detail:"A trusted brand allows pricing above commodity rates. Coca-Cola, See's Candies, American Express — all examples of brand moats Berkshire held for decades.", quote:"" },
+  { id:65, cat:"moats", name:"Switching Costs", source:"Berkshire Meetings", detail:"When customers face significant cost or pain in switching to a competitor, the incumbent has pricing power. Enterprise software, banks, and industrial suppliers often have high switching costs.", quote:"" },
+  { id:66, cat:"moats", name:"Network Effects", source:"Berkshire Meetings", detail:"The value of a product increases as more people use it. Visa, Mastercard, and exchanges benefit from this — each new user makes the network more valuable to all others.", quote:"" },
+  { id:67, cat:"moats", name:"Scale Economies — Supply Side", source:"Berkshire Meetings", detail:"Fixed costs spread over more units lowers average cost. GEICO's low-cost insurance model and Costco's buying power are examples. The largest player wins in many industries.", quote:"" },
+  { id:68, cat:"moats", name:"Scale Economies — Demand Side", source:"Berkshire Meetings", detail:"More users generate more value for each other. Social networks and two-sided markets benefit here — different from supply-side scale but equally powerful.", quote:"" },
+  { id:69, cat:"moats", name:"Cost Advantages", source:"Berkshire Meetings", detail:"Structural low-cost position due to proprietary processes, geography, or scale. GEICO's direct model eliminated the agent layer — a structural cost advantage, not a temporary efficiency.", quote:"" },
+  { id:70, cat:"moats", name:"Winner-Take-Most Markets", source:"Poor Charlie's Almanack", detail:"In markets with strong network effects or economies of scale, one or two players dominate and earn outsized returns. The economics of first-to-scale are powerful.", quote:"" },
+  { id:71, cat:"moats", name:"Surfing Long Waves", source:"Poor Charlie's Almanack", detail:"Identifying powerful secular trends early and riding them — like early investment in newspapers, Coke's global expansion, or financial services growth — requires patience and foresight.", quote:"" },
+  { id:72, cat:"moats", name:"Distribution Lock-In", source:"Poor Charlie's Almanack", detail:"Businesses with locked-in physical distribution networks (like railroads, Coke's bottlers, or retail real estate) can be effectively unassailable even without other moats.", quote:"" },
+  { id:73, cat:"moats", name:"Moat Durability", source:"Berkshire Annual Meetings", detail:"The key question is not just whether a moat exists today, but how long it will persist. Technology can erode moats quickly; habit and necessity can protect them for decades.", quote:"" },
+  { id:74, cat:"moats", name:"Industry Structure Analysis", source:"Poor Charlie's Almanack", detail:"The structure of an industry — number of competitors, barriers to entry, buyer/supplier power — determines the level of returns that participants can sustainably earn.", quote:"" },
+  { id:75, cat:"moats", name:"Experience / Learning Curve", source:"Elementary Worldly Wisdom", detail:"Costs fall systematically as cumulative production experience accumulates. Early scale advantage can become self-reinforcing. Explains why first-movers often stay ahead.", quote:"" },
+  { id:76, cat:"moats", name:"Cancer-Surgery Formula", source:"Poor Charlie's Almanack", detail:"Munger's term for cutting a bad part of a business to save the whole. Resist the temptation to keep a failing division alive — remove it decisively before it metastasizes.", quote:"" },
+
+  // ── MATH & PROBABILITY ──
+  { id:77, cat:"math", name:"Compounding", source:"Berkshire Letters; Elementary Worldly Wisdom", detail:"The most powerful force in investing. Munger called the ability to see compounding as a mental skill most people lack. A dollar at 20% for 30 years becomes $237. Time and rate are everything.", quote:"Understanding both the power of compound interest and the difficulty of getting it is the heart and soul of understanding a lot of things." },
+  { id:78, cat:"math", name:"Expected Value (EV)", source:"Elementary Worldly Wisdom", detail:"Probability × Payoff. Munger made big bets when EV was highly positive — even if the probability of success was not high. Asymmetric payoff profiles are the goal.", quote:"" },
+  { id:79, cat:"math", name:"Probabilistic Thinking / Base Rates", source:"Elementary Worldly Wisdom", detail:"Always ask: what's the base rate for this type of outcome? Don't let the story of a specific case override the statistical reality. Most businesses fail. Most investments disappoint.", quote:"" },
+  { id:80, cat:"math", name:"Bayesian Updating", source:"Poor Charlie's Almanack", detail:"Update your beliefs as new evidence arrives. Don't let sunk cost, pride, or Inconsistency-Avoidance Tendency stop you from revising a wrong position.", quote:"" },
+  { id:81, cat:"math", name:"Regression to the Mean", source:"Elementary Worldly Wisdom", detail:"Extreme values tend to move toward the average over time. Exceptional performance is often partly luck and will moderate. This trips up investors who extrapolate outliers.", quote:"" },
+  { id:82, cat:"math", name:"Normal Distribution vs. Fat Tails", source:"Poor Charlie's Almanack", detail:"Many real-world phenomena have fat tails — extreme events happen far more often than Gaussian distributions predict. The 2008 financial crisis was a fat-tail event conventional models said was nearly impossible.", quote:"" },
+  { id:83, cat:"math", name:"Power Laws", source:"Poor Charlie's Almanack", detail:"A small number of things account for a disproportionate share of outcomes — not a bell curve but a power curve. A few investments, a few decisions, a few ideas will account for most of the results.", quote:"" },
+  { id:84, cat:"math", name:"Cost-Benefit Analysis", source:"Elementary Worldly Wisdom", detail:"Formal framework for comparing benefits and costs of a decision, including opportunity costs and second-order effects. More useful than intuition for complex trade-offs.", quote:"" },
+  { id:85, cat:"math", name:"Optionality / Asymmetric Payoffs", source:"Poor Charlie's Almanack", detail:"Seek situations where downside is limited but upside is large. The best investment is one where you can lose 1x but gain 10x+. This is not available often — be patient.", quote:"" },
+  { id:86, cat:"math", name:"Permutations and Combinations", source:"Elementary Worldly Wisdom", detail:"Understanding how many ways things can combine is critical in probability. Most people's intuition about combinatorics is badly wrong — systematic enumeration helps.", quote:"" },
+  { id:87, cat:"math", name:"Fat-Pitch Strategy", source:"Berkshire Meetings; Poor Charlie's Almanack", detail:"In baseball, you don't have to swing at every pitch. Wait for the fat pitch — the obvious, large-margin opportunity. When it comes, swing hard. This requires patience most people lack.", quote:"Not investing big when there's the opportunity is as much a mistake as not investing at all." },
+  { id:88, cat:"math", name:"Kelly-Type Thinking", source:"Poor Charlie's Almanack", detail:"Optimal bet-sizing is a function of edge and odds. You should bet more when your edge is large and odds are favorable, and less when edge is small. Concentration when confident is rational.", quote:"" },
+
+  // ── SYSTEMS & PHYSICS ──
+  { id:89, cat:"systems", name:"Critical Mass / Threshold Effects", source:"Elementary Worldly Wisdom", detail:"Systems change behavior qualitatively when they cross certain thresholds. A nuclear reaction requires critical mass. Below: safe. Above: chain reaction. Business networks behave similarly.", quote:"" },
+  { id:90, cat:"systems", name:"Feedback Loops — Positive (Reinforcing)", source:"Elementary Worldly Wisdom", detail:"Self-reinforcing cycles that amplify: success breeds resources that breed more success (Berkshire's float). Also: bubbles, viral growth, and collapse spirals.", quote:"" },
+  { id:91, cat:"systems", name:"Feedback Loops — Negative (Stabilizing)", source:"Elementary Worldly Wisdom", detail:"Self-correcting cycles: high prices attract supply, which drives prices back down. Markets, ecosystems, and physiology all depend on negative feedback for stability.", quote:"" },
+  { id:92, cat:"systems", name:"Leverage", source:"Elementary Worldly Wisdom", detail:"Small inputs producing large outputs — financial leverage, mechanical leverage, or social leverage (key people). Munger admired leverage in businesses but was cautious with financial leverage.", quote:"" },
+  { id:93, cat:"systems", name:"Redundancy / Backup Systems", source:"Elementary Worldly Wisdom", detail:"Reliable systems have backups — two engines on a plane, multiple suppliers, cash reserves. Over-optimization to eliminate redundancy creates fragility. Munger kept Berkshire's balance sheet very conservative.", quote:"" },
+  { id:94, cat:"systems", name:"Breakpoints / Phase Transitions", source:"Elementary Worldly Wisdom", detail:"Systems change phase qualitatively at certain points — water becomes ice, a market becomes a panic. Munger looked for early signs of phase transitions in industries.", quote:"" },
+  { id:95, cat:"systems", name:"Friction & Efficiency Losses", source:"Elementary Worldly Wisdom", detail:"Every system has friction — transaction costs, bureaucracy, taxes, coordination costs. Minimizing unnecessary friction is a source of durable advantage (see Berkshire's holding structure).", quote:"" },
+  { id:96, cat:"systems", name:"Bottlenecks & Constraints", source:"Elementary Worldly Wisdom", detail:"Systems move at the speed of their slowest component. In investing: the bottleneck is often the quality of management or the regulatory environment, not capital.", quote:"" },
+  { id:97, cat:"systems", name:"Nonlinearity", source:"Elementary Worldly Wisdom", detail:"Small changes in inputs can cause disproportionately large changes in outputs. A tiny additional stress on an already-leveraged system can cause catastrophic failure.", quote:"" },
+  { id:98, cat:"systems", name:"Reliability Engineering / Safety Margins", source:"Elementary Worldly Wisdom", detail:"Engineers build in safety margins — bridges support far more than the anticipated load. Munger applied the same logic to balance sheets, business quality, and personal finances.", quote:"" },
+  { id:99, cat:"systems", name:"Physics Envy", source:"Poor Charlie's Almanack", detail:"The dangerous tendency to seek Newtonian, one-size-fits-all formulas for complex adaptive systems. Economics and human behavior are not physics — avoid false precision.", quote:"I'm not going to pretend to know things I don't know." },
+
+  // ── BIOLOGY ──
+  { id:100, cat:"biology", name:"Evolution by Natural Selection", source:"Elementary Worldly Wisdom", detail:"Munger's most beloved model from outside economics. The insight that complex adaptation requires no designer — just variation, selection, and time — has vast analogs in business and culture.", quote:"" },
+  { id:101, cat:"biology", name:"Adaptation & Fitness Landscapes", source:"Elementary Worldly Wisdom", detail:"Organisms (and businesses) must adapt to their environment or die. An adaptation that optimizes for today's environment may be fatal in tomorrow's. Change the environment; invalidate the moat.", quote:"" },
+  { id:102, cat:"biology", name:"Red Queen Effect", source:"Poor Charlie's Almanack", detail:"In a competitive environment, you must keep running just to stay in place. Most industries require constant investment just to maintain position. Only moats provide temporary rest.", quote:"" },
+  { id:103, cat:"biology", name:"Ecological Niches", source:"Elementary Worldly Wisdom", detail:"Specialized occupants of narrow niches can thrive because generalists don't compete directly. Small businesses can prosper by dominating niches that large companies find uneconomical.", quote:"" },
+  { id:104, cat:"biology", name:"Autopsy Learning", source:"Poor Charlie's Almanack", detail:"Study failures — businesses that died, decisions that went wrong, great investors' mistakes. Darwin wrote down counterevidence immediately; Munger systematically studied investment failures.", quote:"" },
+  { id:105, cat:"biology", name:"Population Dynamics / Boom-Bust Cycles", source:"Elementary Worldly Wisdom", detail:"Predator-prey cycles, overbreeding, and crashes are visible in both biology and business. Industries overshoot during booms and collapse during busts — a predictable biological dynamic.", quote:"" },
+
+  // ── ORGANIZATIONAL ──
+  { id:106, cat:"org", name:"Culture as Control System", source:"Berkshire Annual Meetings", detail:"A strong, right culture does more to enforce standards than any rulebook. Berkshire's culture — autonomy, trust, long-term thinking — is its most important, least-copiable asset.", quote:"" },
+  { id:107, cat:"org", name:"Management Incentives & Compensation Design", source:"Berkshire Annual Meetings", detail:"Pay incentives are the most powerful shaper of management behavior. If you reward short-term EPS, you'll get short-term decisions regardless of what the strategy document says.", quote:"" },
+];
+
+let activeFilter = 'all';
+let openCard = null;
+
+function setFilter(cat, el) {
+  activeFilter = cat;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  applyFilters();
+}
+
+function applyFilters() {
+  const q = document.getElementById('search').value.toLowerCase().trim();
+  const filtered = MODELS.filter(m => {
+    const matchCat = activeFilter === 'all' || m.cat === activeFilter;
+    const matchQ = !q || m.name.toLowerCase().includes(q) || m.detail.toLowerCase().includes(q) || m.source.toLowerCase().includes(q);
+    return matchCat && matchQ;
+  });
+  renderGrid(filtered);
+  document.getElementById('count-display').textContent = `${filtered.length} model${filtered.length!==1?'s':''}`;
+  document.getElementById('total-count').textContent = filtered.length;
+}
+
+function renderGrid(models) {
+  const area = document.getElementById('grid-area');
+  if (!models.length) {
+    area.innerHTML = '<div class="empty-state">No models match your search.</div>';
+    return;
+  }
+
+  // Group by category
+  const groups = {};
+  models.forEach(m => {
+    if (!groups[m.cat]) groups[m.cat] = [];
+    groups[m.cat].push(m);
+  });
+
+  let html = '';
+  Object.entries(groups).forEach(([cat, items]) => {
+    const info = CATS[cat];
+    html += `
+      <div class="section-header">
+        <span class="section-title">${info.label}</span>
+        <span class="section-count">${items.length}</span>
+      </div>
+      <div class="cards-grid">
+        ${items.map(m => renderCard(m)).join('')}
+      </div>
+    `;
+  });
+  area.innerHTML = html;
+}
+
+function renderCard(m) {
+  return `
+    <div class="card" data-cat="${m.cat}" data-id="${m.id}" onclick="toggleCard(${m.id}, this)">
+      <div class="card-num">#${m.id} · ${CATS[m.cat].short}</div>
+      <div class="card-name">${m.name}</div>
+      <div class="card-source">${m.source}</div>
+      <div class="card-detail" id="detail-${m.id}">
+        ${m.detail}
+        ${m.quote ? `<div class="card-quote">"${m.quote}"</div>` : ''}
+      </div>
+    </div>
+  `;
+}
+
+function toggleCard(id, el) {
+  const detail = document.getElementById('detail-' + id);
+  const isOpen = detail.classList.contains('open');
+  // Close all
+  document.querySelectorAll('.card-detail').forEach(d => d.classList.remove('open'));
+  document.querySelectorAll('.card').forEach(c => c.classList.remove('open'));
+  if (!isOpen) {
+    detail.classList.add('open');
+    el.classList.add('open');
+  }
+}
+
+function renderSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  let html = '<div class="sidebar-section">';
+  html += '<div class="sidebar-heading">Disciplines</div>';
+  html += `<div class="sidebar-item active" onclick="setFilter('all', document.querySelector('[data-cat=all]'))"><div class="sidebar-dot" style="background:#e8e3d8"></div>All Models</div>`;
+  Object.entries(CATS).forEach(([cat, info]) => {
+    const count = MODELS.filter(m => m.cat === cat).length;
+    html += `<div class="sidebar-item" onclick="setFilter('${cat}', document.querySelector('[data-cat=${cat}]'))"><div class="sidebar-dot" style="background:${info.color}"></div>${info.label} <span style="margin-left:auto;color:var(--text-dim);font-size:10px">${count}</span></div>`;
+  });
+  html += '</div>';
+  sidebar.innerHTML = html;
+}
+
+renderSidebar();
+applyFilters();
+</script>
+</body>
+</html>
